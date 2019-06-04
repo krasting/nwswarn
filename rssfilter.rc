@@ -1,0 +1,136 @@
+#
+# $Id$
+#
+
+lappend cond {
+  ($rc(ftype) eq "txt")
+}
+lappend action {
+  exec /usr/local/nws-warning/warning.py $rc(fpath);
+}
+
+lappend cond {
+    ($rc(ftype) eq "txt") && [regexp {.+} $rc(header_wmoid)]
+}
+lappend action {
+    set rc_status 0;
+    set rc_rss_subchannel "emwin.txt.$rc(header_station)";
+    set rc_rss_channel_desc "All";
+    set rc_rss_template "st";
+    send_rss [list $rc_rss_subchannel $rc_rss_channel_desc $rc_rss_template \
+	$rc(prodname) $rc(header) $rc(fpath)];
+
+    
+}
+lappend cond {
+    ($rc(ftype) eq "txt") && [regexp {URGENT} $rc(bodypart)]
+}
+lappend action {
+    set rc_status 0;
+    set rc_rss_subchannel "emwin.urgent.$rc(header_station)";
+    set rc_rss_channel_desc "Urgent";
+    set rc_rss_template "st";
+    send_rss [list $rc_rss_subchannel $rc_rss_channel_desc $rc_rss_template \
+	$rc(prodname) $rc(header) $rc(fpath)];
+
+    
+}
+lappend cond {
+    ($rc(ftype) eq "txt") && [regexp {^[crstu]} $rc(header_wmoid)]
+}
+lappend action {
+    set rc_status 0;
+    set rc_rss_subchannel "emwin.data.$rc(header_station)";
+    set rc_rss_channel_desc "Data";
+    set rc_rss_template "st";
+    send_rss [list $rc_rss_subchannel $rc_rss_channel_desc $rc_rss_template \
+	$rc(prodname) $rc(header) $rc(fpath)];
+
+    break;
+}
+lappend cond {
+    ($rc(ftype) eq "txt") && [regexp {^a} $rc(header_wmoid)]
+}
+lappend action {
+    set rc_status 0;
+    set rc_rss_subchannel "emwin.summary.$rc(header_station)";
+    set rc_rss_channel_desc "Summary";
+    set rc_rss_template "st";
+    send_rss [list $rc_rss_subchannel $rc_rss_channel_desc $rc_rss_template \
+	$rc(prodname) $rc(header) $rc(fpath)];
+
+    break;
+}
+lappend cond {
+    ($rc(ftype) eq "txt") && [regexp {^f} $rc(header_wmoid)]
+}
+lappend action {
+    set rc_status 0;
+    set rc_rss_subchannel "emwin.forecast.$rc(header_station)";
+    set rc_rss_channel_desc "Forecast";
+    set rc_rss_template "st";
+    send_rss [list $rc_rss_subchannel $rc_rss_channel_desc $rc_rss_template \
+	$rc(prodname) $rc(header) $rc(fpath)];
+
+    break;
+}
+lappend cond {
+    ($rc(ftype) eq "txt") && [regexp {^w} $rc(header_wmoid)]
+}
+lappend action {
+    set rc_status 0;
+    set rc_rss_subchannel "emwin.warnings.$rc(header_station)";
+    set rc_rss_channel_desc "Warnings";
+    set rc_rss_template "st";
+    send_rss [list $rc_rss_subchannel $rc_rss_channel_desc $rc_rss_template \
+	$rc(prodname) $rc(header) $rc(fpath)];
+
+    break;
+}
+
+# If a sat or rad image (as sent by nbsp) can be identified, it is sent
+# to the corresponding noaaport group. The rest are sent to the emwin.img
+# group.
+
+# Match a (nbsp) satellite image
+lappend cond {
+    [regexp {gif|jpg} $rc(ftype)] && [regexp {^tig(.)} $rc(prodname) s s1]
+}
+lappend action {
+    set rc_status 0;
+    set rc_rss_subchannel "sat.img.tig$s1";
+    set rc_rss_channel_desc "Satellite Images";
+    set rc_rss_template "sat";
+    send_rss [list $rc_rss_subchannel $rc_rss_channel_desc $rc_rss_template \
+	$rc(prodname) $rc(header) $rc(fpath)];
+
+    break;
+}
+# Match a (nbsp) radar image.
+lappend cond {
+    [regexp {gif|jpg} $rc(ftype)] && [regexp {^(n0(r|s|v|z)|n1(p|r|s|v)|n2(r|s)|n3(r|s)|ncr|nvl|net|ntp|nvw)(.{3})} $rc(prodname) s s1 s2 s3 s4 s5 s6]
+}
+lappend action {
+    set rc_status 0;
+    set rc_rss_subchannel "rad.img.$s6";
+    set rc_rss_channel_desc "Radar Images";
+    set rc_rss_template "rad";
+    send_rss [list $rc_rss_subchannel $rc_rss_channel_desc $rc_rss_template \
+	$rc(prodname) $rc(header) $rc(fpath)];
+
+    break;
+}
+# Match the rest (as sent by regular emwin)
+lappend cond {
+    [regexp {gif|jpg} $rc(ftype)] && [regexp {.*} $rc(prodname)]
+}
+lappend action {
+    set rc_status 0;
+    set rc_rss_subchannel "emwin.img";
+    set rc_rss_channel_desc "Images";
+    set rc_rss_template "img";
+    send_rss [list $rc_rss_subchannel $rc_rss_channel_desc $rc_rss_template \
+	$rc(prodname) $rc(header) $rc(fpath)];
+
+    break;
+}

@@ -1,0 +1,15 @@
+{
+  "AWSEBDockerrunVersion": "1",
+  "Ports": [
+    {
+      "ContainerPort": "8016"
+    }
+  ],
+  "Volumes": [
+    {
+      "HostDirectory": "/configs",
+      "ContainerDirectory": "/configs"
+    }
+  ],
+  "Logging": "/var/log/messages"
+}
